@@ -67,11 +67,28 @@ This reverts git to using each repo's own local `.git/hooks/` folder as normal.
 
 ## Important caveat
 
-`core.hooksPath` fully replaces git's default hook lookup. If any repo already has its own local `.git/hooks/pre-commit`, it will be **ignored** while this global path is active — git only checks one location, not both. Let me know if you want the global hook updated to also chain-call a repo's local hook when one exists.
+`core.hooksPath` fully replaces git's default hook lookup. If any repo already has its own local `.git/hooks/pre-commit`, it's **ignored** while this global path is active — git only checks one location, not both. Turn on `chainRepoLocalHook` in `config.json` (or via the app's Settings tab) to have the global hook detect and run that repo-local hook itself instead of silently skipping it.
 
-## Current behavior
+## Current checks
 
-Each check is controlled via `~/.git-hooks-global/config.json` (`enabled`, `blocking` per check, plus per-repo overrides under `repoOverrides`). Only a placeholder check exists so far, and it's non-blocking by default since it can't meaningfully fail yet. Real security checks (secrets scanning, sensitive file detection, etc.) are still undecided — see `planning/decisions.md`. Once added, set a check's `blocking` to `true` (globally or per-repo) to make it actually fail the commit.
+Controlled via `~/.git-hooks-global/config.json` — `enabled`/`blocking` per check, plus per-repo overrides under `repoOverrides`, and a global `defaultBlocking` fallback.
+
+| Check | Runs when | Default |
+|---|---|---|
+| `placeholder` | always | enabled, non-blocking |
+| `npm-audit` | repo has a `package.json` | enabled, non-blocking |
+| `npm-doctor` | repo has a `package.json` | enabled, non-blocking |
+
+Both non-npm-repo skips and no-op are cheap; `npm-doctor` specifically can take several seconds (it verifies your whole local npm cache) and can report "fail" purely over npm/Node version mismatches unrelated to the commit — worth watching if it feels slow. Set a check's `blocking` to `true` (globally or per-repo) to make its failure actually stop the commit. Broader real checks (secrets scanning, sensitive file detection, etc.) are still undecided — see `planning/decisions.md`.
+
+## Skipping checks for one commit
+
+```bash
+HOOK_SKIP=npm-audit,npm-doctor git commit -m "wip"   # skip specific checks
+HOOK_SKIP=all git commit -m "wip"                    # skip everything
+```
+
+Unlike `git commit --no-verify` (which bypasses the hook at the git level and leaves **no record**), `HOOK_SKIP` still runs the hook and logs each skipped check with status `"skip"` — so skipped commits stay visible in history instead of disappearing entirely.
 
 ## Electron app (in progress)
 

@@ -3,7 +3,9 @@
   "defaultBlocking": true,
   "chainRepoLocalHook": false,
   "checks": {
-    "placeholder": { "enabled": true, "blocking": false }
+    "placeholder": { "enabled": true, "blocking": false },
+    "npm-audit": { "enabled": true, "blocking": false },
+    "npm-doctor": { "enabled": true, "blocking": false }
   },
   "repoOverrides": {}
 }

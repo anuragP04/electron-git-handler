@@ -1,5 +1,12 @@
 const state = { history: [], config: null };
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 // --- Nav tab switching ---
 document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -58,7 +65,36 @@ function renderHistory() {
 }
 
 function openDetail(record) {
-  document.getElementById("detail-body").textContent = JSON.stringify(record, null, 2);
+  const body = document.getElementById("detail-body");
+  const time = new Date(record.timestamp).toLocaleString();
+
+  const checksHtml = (record.checks || [])
+    .map(
+      (check) => `
+        <div class="check-card">
+          <div class="check-card-header">
+            <span class="check-card-name">${escapeHtml(check.name)}</span>
+            <span class="status-pill ${check.status}">${escapeHtml(check.status)}</span>
+            ${check.blocking ? '<span class="blocking-tag">blocking</span>' : ""}
+          </div>
+          <pre class="check-card-message">${escapeHtml(check.message || "")}</pre>
+        </div>
+      `
+    )
+    .join("");
+
+  body.innerHTML = `
+    <div class="detail-summary">
+      <div class="detail-field"><span class="detail-label">Repo</span><span>${escapeHtml(record.repo)}</span></div>
+      <div class="detail-field"><span class="detail-label">Branch</span><span>${escapeHtml(record.branch)}</span></div>
+      <div class="detail-field"><span class="detail-label">Time</span><span>${escapeHtml(time)}</span></div>
+      <div class="detail-field"><span class="detail-label">Result</span><span class="status-pill ${record.status}">${escapeHtml(record.status)}</span></div>
+    </div>
+    <div class="detail-checks">
+      ${checksHtml || '<p class="muted">No checks ran.</p>'}
+    </div>
+  `;
+
   document.getElementById("detail-modal").hidden = false;
 }
 

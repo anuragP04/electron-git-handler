@@ -68,8 +68,12 @@ Phase-wise build checklist. See [plan.md](plan.md) for architecture/rationale an
 - [ ] **Code signing / notarization — blocked.** This machine has an "Apple Development: Anurag Patel" certificate but it's **expired**, so `electron-builder` correctly skipped signing. A real distributable `.dmg` needs a valid **Developer ID Application** certificate (not just an Apple Development one — that's for local testing, not distribution) from your Apple Developer account, plus notarization credentials (Apple ID + app-specific password, or API key) supplied to `electron-builder` via env vars. Nothing more to do here until that's sorted on your end.
 - [ ] **Not run: actual `.dmg` build, fresh-machine install/uninstall verification.** Only the unsigned `--dir` build was sanity-checked in this sandbox (no display available to launch/screenshot it). Needs to happen on your real Mac once you're ready to distribute.
 
-## Phase 9 — Actual security check logic (deferred, blocked on user decision)
-- [ ] Decide scope of real checks (secrets scanning, sensitive file detection, dependency vuln checks, etc.) — **not yet decided, do not assume**
-- [ ] Implement chosen checks
-- [ ] Confirm blocking behavior (non-zero exit on failure) is wired end-to-end
+## Phase 9 — Actual security check logic (partially decided)
+- [x] `npm-audit` and `npm-doctor` added as real checks, per explicit user request — both run only when the repo has a `package.json` (skip cleanly otherwise), both `enabled: true` / `blocking: false` by default in `config.default.json`
+- [x] Verified: non-npm repo skips both instantly with no npm invocation; npm repo actually runs both and logs full output
+- [x] Fixed a status-reporting gap this surfaced: a check can now be `pass` / `fail` / `skip`, and the commit record's overall status is `blocked` (a blocking check failed, commit stopped) vs. `fail` (a check failed but wasn't blocking, commit went through) vs. `pass` — previously a non-blocking failure was mislabeled `pass` in the log/history UI
+- [ ] **Real-world caveat surfaced by testing, needs a call:** `npm doctor` took ~18s on a trivial commit (it verifies the entire local npm cache, ~13k tarballs) and reported "fail" purely because this machine's npm/Node versions differ from npm's latest recommendation — unrelated to the actual commit content. Left enabled + non-blocking per what was asked, but worth deciding whether to disable it by default, swap it for something cheaper, or accept the latency.
+- [x] `HOOK_SKIP` env var added to skip specific checks (`HOOK_SKIP=npm-audit,npm-doctor`) or everything (`HOOK_SKIP=all`) for one commit, without bypassing the hook entirely — each skip still gets logged with status `"skip"`, unlike `git commit --no-verify` which leaves no record. Verified both named and `all` skip modes against real commits.
+- [x] Fixed a UI bug found during review: the Commit Detail modal appeared open on app launch and wouldn't close, due to a CSS specificity conflict between `.modal { display: flex }` and the `[hidden]` attribute — fixed in `app/renderer/styles.css`
+- [ ] Broader scope (secrets scanning, sensitive file detection, etc.) — still **not decided**, do not assume
 - [ ] Decide on additional hook types beyond `pre-commit` (e.g. `pre-push`)
