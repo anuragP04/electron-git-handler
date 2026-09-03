@@ -1,0 +1,13 @@
+{
+  "name": "git-handler-hook",
+  "version": "0.1.0",
+  "description": "Manage the global git pre-commit hook — install/uninstall, settings, and local commit history.",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^38.0.0"
+  }
+}

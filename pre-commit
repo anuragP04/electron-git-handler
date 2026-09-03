@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 # Global pre-commit hook — applies to every repo on this machine.
 # Triggered automatically whenever `git commit` is run, in any repository.
-echo "anurag patel"
-exit 0
+#
+# Git only ever looks for a file literally named `pre-commit`, so this stays
+# a plain executable bash script. The actual check logic lives in hook.js
+# (Node) — this file just hands off to it.
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "[git-handler-hook] node not found on PATH — skipping checks" >&2
+  exit 0
+fi
+
+node "$DIR/hook.js" "$(pwd)"
+exit $?

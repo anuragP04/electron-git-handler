@@ -8,19 +8,26 @@ Phase-wise build checklist. See [plan.md](plan.md) for architecture/rationale an
 - [x] `README.md` — usage docs
 
 ## Phase 1 — Structured hook output
-- [ ] Decide hook language: stay bash, or move to Node (see open question in plan.md)
-- [ ] Hook writes one structured record per run to a local log store (repo path, branch, timestamp, checks run, pass/fail, exit code, full stdout/stderr)
-- [ ] Decide log store format: JSON lines file vs. SQLite
-- [ ] Hook still prints to terminal as before (structured logging is additive, not a replacement)
+- [x] Decide hook language: hybrid — `pre-commit` stays bash (git only ever looks for that filename, must be directly executable), delegates to `hook.js` (Node) for actual logic
+- [x] Hook writes one structured record per run to a local log store (repo path, branch, timestamp, checks run, pass/fail, exit code, full stdout/stderr)
+- [x] Decide log store format: JSON lines file (`~/.git-hooks-global/logs/commits.jsonl`) — can migrate to SQLite later if querying JSONL becomes limiting
+- [x] Hook still prints to terminal as before (structured logging is additive, not a replacement)
+- [x] `install.sh` copies both `pre-commit` and `hook.js`, warns if `node` isn't on PATH
+- [x] Verified end-to-end: fresh repo, first commit (no HEAD yet) and second commit both log correctly with no stray stderr output
 
 ## Phase 2 — Config file
-- [ ] Define `config.json` schema (enabled checks, blocking vs. warn-only, per-repo overrides, chain-repo-local-hook toggle)
-- [ ] Hook reads `config.json` before running checks
-- [ ] Default `config.json` written on first install
+- [x] Define `config.json` schema (`checks.<name>.enabled/blocking`, `defaultBlocking`, `repoOverrides.<repoRoot>.checks.<name>`, `chainRepoLocalHook` toggle reserved for later)
+- [x] Hook reads `config.json` before running checks, merges global → per-repo override per check
+- [x] Default config lives at `config.default.json` in the repo; `install.sh` seeds it to `~/.git-hooks-global/config.json` only on first install (never overwrites existing user settings on reinstall)
+- [x] Verified: disabling a check skips it and its terminal output; a blocking check that fails exits 1 and actually blocks the commit; a non-blocking failure would log `fail` but not block (placeholder check is currently non-blocking by default since it can't meaningfully fail yet)
 
 ## Phase 3 — Electron app scaffold
-- [ ] Set up Electron project (main + renderer)
-- [ ] Basic window/menu shell for Mac
+- [x] Set up Electron project in `app/` (`package.json`, `main.js`, `preload.js`, `renderer/`)
+- [x] Basic window/menu shell for Mac (native app menu incl. About/Hide/Quit, Edit, View; contextIsolation on, nodeIntegration off)
+- [x] Renderer shell with header (title + disabled Uninstall button placeholder) and nav tabs (History/Settings placeholders) for later phases to fill in
+- [x] `npm install` clean, no known-vulnerable Electron version (bumped past the CVE range to 38.8.6)
+- [x] Syntax-checked all source files (`node --check`, JSON/HTML parse)
+- [ ] **Not yet verified visually** — this sandbox forces `ELECTRON_RUN_AS_NODE=1` so the actual window can't be rendered/screenshotted here. Needs `cd app && npm install && npm start` run on an actual Mac to confirm the window/menu really show up.
 
 ## Phase 4 — First-launch install flow
 - [ ] On first launch: create `~/.git-hooks-global/` if missing

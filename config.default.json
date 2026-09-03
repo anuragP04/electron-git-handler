@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "defaultBlocking": true,
+  "chainRepoLocalHook": false,
+  "checks": {
+    "placeholder": { "enabled": true, "blocking": false }
+  },
+  "repoOverrides": {}
+}

@@ -16,8 +16,11 @@ Once that's set, `git commit` (in any repo) will always execute `~/.git-hooks-gl
 
 | File | Purpose |
 |---|---|
-| `pre-commit` | The hook script itself. Currently prints `anurag` to the console. |
-| `install.sh` | One-time installer — copies the hook into place and sets the global git config. |
+| `pre-commit` | Bash entry point git actually invokes (git only ever looks for this exact filename). Hands off to `hook.js`. |
+| `hook.js` | Node script with the real check logic — runs checks per `config.json`, prints to the terminal, and writes a structured record to `~/.git-hooks-global/logs/commits.jsonl`. |
+| `config.default.json` | Default settings, seeded to `~/.git-hooks-global/config.json` on first install only. |
+| `install.sh` | One-time installer — copies the hook + config into place and sets the global git config. |
+| `app/` | The Electron app (in progress) — GUI for install/uninstall, settings, and commit history. See `planning/`. |
 
 ## Install
 
@@ -49,8 +52,10 @@ git commit -m "test"
 
 Console output should include:
 ```
-anurag
+anurag patel
 ```
+
+(Requires `node` on PATH — if it's missing, the hook logs a warning and skips checks rather than blocking the commit.)
 
 ## Uninstall / disable
 
@@ -66,4 +71,16 @@ This reverts git to using each repo's own local `.git/hooks/` folder as normal.
 
 ## Current behavior
 
-The hook currently does **not** block commits — it just prints and exits `0`. Blocking logic and real security checks (secrets scanning, sensitive file detection, etc.) can be added into `pre-commit` later; just re-run `install.sh` (or manually re-copy the file) to update the installed version.
+Each check is controlled via `~/.git-hooks-global/config.json` (`enabled`, `blocking` per check, plus per-repo overrides under `repoOverrides`). Only a placeholder check exists so far, and it's non-blocking by default since it can't meaningfully fail yet. Real security checks (secrets scanning, sensitive file detection, etc.) are still undecided — see `planning/decisions.md`. Once added, set a check's `blocking` to `true` (globally or per-repo) to make it actually fail the commit.
+
+## Electron app (in progress)
+
+A GUI for managing all of this — install/uninstall, toggling checks, and browsing commit history in detail — lives in `app/`. To run it locally:
+
+```bash
+cd app
+npm install
+npm start
+```
+
+See `planning/plan.md`, `planning/checklist.md`, and `planning/decisions.md` for the full design and current build status.
