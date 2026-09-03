@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Global pre-commit hook — applies to every repo on this machine.
+# Triggered automatically whenever `git commit` is run, in any repository.
+echo "anurag patel"
+exit 0
