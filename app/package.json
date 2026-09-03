@@ -5,9 +5,23 @@
   "private": true,
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "sync-hooks": "node scripts/sync-hooks.js",
+    "prestart": "npm run sync-hooks",
+    "start": "electron .",
+    "predist": "npm run sync-hooks",
+    "dist": "electron-builder --mac"
   },
   "devDependencies": {
-    "electron": "^38.0.0"
+    "electron": "^38.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.anuragp04.githandlerhook",
+    "productName": "Git Handler Hook",
+    "files": ["main.js", "preload.js", "lib/**/*", "renderer/**/*", "resources/**/*"],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": "dmg"
+    }
   }
 }

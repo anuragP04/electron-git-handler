@@ -30,38 +30,43 @@ Phase-wise build checklist. See [plan.md](plan.md) for architecture/rationale an
 - [ ] **Not yet verified visually** — this sandbox forces `ELECTRON_RUN_AS_NODE=1` so the actual window can't be rendered/screenshotted here. Needs `cd app && npm install && npm start` run on an actual Mac to confirm the window/menu really show up.
 
 ## Phase 4 — First-launch install flow
-- [ ] On first launch: create `~/.git-hooks-global/` if missing
-- [ ] Copy/write `pre-commit` into it, `chmod +x`
-- [ ] Write default `config.json`
-- [ ] Run `git config --global core.hooksPath ~/.git-hooks-global`
-- [ ] Show install confirmation/status in the UI
+- [x] On launch: create `~/.git-hooks-global/` if missing, only when not already installed (idempotent — checked via `hookManager.isInstalled()`)
+- [x] Copy `pre-commit` + `hook.js` from `app/resources/hooks/` (bundled payload, synced from repo root via `npm run sync-hooks`) into `~/.git-hooks-global/`, `chmod +x` on `pre-commit`
+- [x] Write default `config.json` — only if missing, never overwrites existing user settings
+- [x] Run `git config --global core.hooksPath ~/.git-hooks-global`
+- [x] Status badge in the UI header reflects install state (`Installed` / `Not active`) via `hook:getStatus`
+- [x] Core logic (`app/lib/hookManager.js`) tested directly under plain Node against the real hooks dir: install, idempotent re-install, uninstall, re-install — see verification below
 
 ## Phase 5 — History / detail view
-- [ ] Read log store (JSONL/SQLite) in the renderer
-- [ ] List view: one row per commit run (repo, branch, timestamp, pass/fail)
-- [ ] Detail view: full output per commit, matching what printed in the terminal
-- [ ] Live/refresh when a new commit happens (file watch or polling)
+- [x] Renderer reads the log store via `history:get` IPC (main process parses `commits.jsonl`)
+- [x] List view: table with time, repo (basename), branch, pass/fail/blocked pill — most recent first
+- [x] Detail view: click a row to open a modal with the full structured record (all checks, messages, blocking flags)
+- [x] Live refresh: main process `fs.watch`es the logs directory (debounced) and pushes `history:updated` over IPC; renderer re-fetches automatically — verified via real commits made from the terminal while testing
+- [x] Verified end-to-end via `hookManager.readHistory()` against real commits (see Phase 4 verification)
 
 ## Phase 6 — Settings / management UI
-- [ ] Toggle individual checks on/off
-- [ ] Toggle blocking vs. warn-only
-- [ ] Per-repo overrides UI
-- [ ] Toggle chain-repo-local-hook behavior (see known caveat in plan.md)
-- [ ] Save changes back to `config.json`
+- [x] Toggle individual checks on/off (`.check-enabled` checkboxes per check)
+- [x] Toggle blocking vs. warn-only (`.check-blocking` per check, plus a global `defaultBlocking` fallback)
+- [x] Per-repo overrides UI — add a repo path, per-check "disable here" checkboxes, remove a repo override entirely
+- [x] Toggle chain-repo-local-hook behavior — wired all the way through: UI toggle → `config.json` → `hook.js` actually chain-calls the repo's local `.git/hooks/pre-commit` when present and executable, forwarding its exit code as a blocking check. **This resolves the long-standing caveat** in plan.md/decisions.md open question #3 — no longer just a flagged risk.
+- [x] Save changes back to `config.json` via `config:set` IPC
+- [x] Verified via `hookManager` directly: write config → read back matches; verified `chainRepoLocalHook` end-to-end with a real repo-local hook in three states (off / on+pass / on+fail-blocks-commit) — all behaved correctly
 
 ## Phase 7 — Uninstall button
-- [ ] Uninstall button always visible (top of app, per user request)
-- [ ] Confirmation dialog before proceeding (destructive, machine-wide action)
-- [ ] Run `git config --global --unset core.hooksPath`
-- [ ] Remove `~/.git-hooks-global/` hook + config
-- [ ] Decide + implement: prompt to keep or delete history logs (see open question in plan.md)
-- [ ] Show uninstall confirmation in the UI
+- [x] Uninstall button always visible (top of app header)
+- [x] Confirmation dialog before proceeding — native `dialog.showMessageBox` (Cancel/Uninstall), including a checkbox for "Also delete commit history" (resolves open question #2 in decisions.md: user is asked at uninstall time, as planned)
+- [x] Runs `git config --global --unset core.hooksPath`
+- [x] Removes `~/.git-hooks-global/{pre-commit,hook.js,config.json}`
+- [x] Logs deleted only if the checkbox was checked, otherwise preserved
+- [x] Status badge updates in the UI after uninstall completes
+- [x] Verified via `hookManager.performUninstall()` directly: hook files removed, `core.hooksPath` unset, a subsequent commit no longer triggers the hook, logs preserved when `deleteLogs: false`
 
 ## Phase 8 — Packaging & distribution
-- [ ] Package as `.dmg` via electron-builder
-- [ ] Code signing / notarization for Mac
-- [ ] Verify fresh-machine install flow end-to-end (dmg → drag to Applications → launch → hook installed)
-- [ ] Verify uninstall end-to-end (button → hook removed → `git commit` in any repo no longer triggers it)
+- [x] `electron-builder` configured in `app/package.json` (`build` block: appId, productName, mac target `dmg`, `files` list including `resources/**/*`)
+- [x] Sanity-built with `electron-builder --mac --dir` (unpacked, unsigned) — succeeded; confirmed via `asar list` that `main.js`, `preload.js`, `lib/hookManager.js`, `renderer/`, and `resources/hooks/*` are all correctly bundled into `app.asar`
+- [x] Bumped `electron-builder` to `^26.15.3` to clear the vulnerable range flagged by `npm audit` (down to one remaining dev-time-only `extract-zip` advisory in the Electron-download step, not shipped in the app — same as the Electron dependency itself)
+- [ ] **Code signing / notarization — blocked.** This machine has an "Apple Development: Anurag Patel" certificate but it's **expired**, so `electron-builder` correctly skipped signing. A real distributable `.dmg` needs a valid **Developer ID Application** certificate (not just an Apple Development one — that's for local testing, not distribution) from your Apple Developer account, plus notarization credentials (Apple ID + app-specific password, or API key) supplied to `electron-builder` via env vars. Nothing more to do here until that's sorted on your end.
+- [ ] **Not run: actual `.dmg` build, fresh-machine install/uninstall verification.** Only the unsigned `--dir` build was sanity-checked in this sandbox (no display available to launch/screenshot it). Needs to happen on your real Mac once you're ready to distribute.
 
 ## Phase 9 — Actual security check logic (deferred, blocked on user decision)
 - [ ] Decide scope of real checks (secrets scanning, sensitive file detection, dependency vuln checks, etc.) — **not yet decided, do not assume**

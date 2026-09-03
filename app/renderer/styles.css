@@ -18,9 +18,33 @@ header {
   background: #fff;
 }
 
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 header h1 {
   font-size: 18px;
   margin: 0;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: #e8e8ed;
+  color: #6e6e73;
+}
+
+.badge.ok {
+  background: #d1f4dd;
+  color: #1a7f37;
+}
+
+.badge.warn {
+  background: #fde3cf;
+  color: #a35200;
 }
 
 #uninstall-btn {
@@ -33,9 +57,8 @@ header h1 {
   cursor: pointer;
 }
 
-#uninstall-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
+#uninstall-btn:hover {
+  background: #d70015;
 }
 
 nav {
@@ -64,14 +87,193 @@ main {
   padding: 24px;
 }
 
-#view-placeholder {
+.muted {
   color: #6e6e73;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
 }
 
 code {
   background: #e8e8ed;
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+/* History table */
+#history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#history-table th,
+#history-table td {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #eee;
+}
+
+#history-table th {
+  color: #6e6e73;
+  font-weight: 600;
+  background: #fafafa;
+}
+
+#history-table tbody tr {
+  cursor: pointer;
+}
+
+#history-table tbody tr:hover {
+  background: #f5f5f7;
+}
+
+.status-pill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: #e8e8ed;
+}
+
+.status-pill.pass {
+  background: #d1f4dd;
+  color: #1a7f37;
+}
+
+.status-pill.fail {
+  background: #fde0de;
+  color: #c62828;
+}
+
+/* Settings */
+.settings-section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.settings-section h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #6e6e73;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.settings-section label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.check-row:last-child {
+  border-bottom: none;
+}
+
+.check-name {
+  font-weight: 600;
+  font-size: 13px;
+  min-width: 100px;
+}
+
+.check-row label {
+  margin-bottom: 0;
+}
+
+.override-block {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.override-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.remove-override {
+  background: none;
+  border: none;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#settings-save {
+  background: #0071e3;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Detail modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  width: 560px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.modal-header h2 {
+  font-size: 15px;
+  margin: 0;
+}
+
+#detail-close {
+  background: none;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#detail-body {
+  overflow: auto;
+  font-size: 12px;
+  background: #f5f5f7;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 0;
 }

@@ -7,8 +7,11 @@
   </head>
   <body>
     <header>
-      <h1>Git Handler Hook</h1>
-      <button id="uninstall-btn" disabled title="Coming in Phase 7">Uninstall</button>
+      <div class="title-group">
+        <h1>Git Handler Hook</h1>
+        <span id="status-badge" class="badge">checking…</span>
+      </div>
+      <button id="uninstall-btn">Uninstall</button>
     </header>
 
     <nav>
@@ -17,11 +20,39 @@
     </nav>
 
     <main>
-      <section id="view-placeholder">
-        <p>App shell scaffolded. History view, Settings view, and the Uninstall
-        button's behavior land in later phases — see <code>planning/checklist.md</code>.</p>
+      <section id="view-history">
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Repo</th>
+              <th>Branch</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+        <p id="history-empty" class="muted" hidden>No commits recorded yet — make a commit in any repo to see it here.</p>
+      </section>
+
+      <section id="view-settings" hidden>
+        <div id="settings-form"></div>
+        <div class="settings-actions">
+          <button id="settings-save">Save changes</button>
+          <span id="settings-saved" class="muted" hidden>Saved</span>
+        </div>
       </section>
     </main>
+
+    <div id="detail-modal" class="modal" hidden>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Commit detail</h2>
+          <button id="detail-close">Close</button>
+        </div>
+        <pre id="detail-body"></pre>
+      </div>
+    </div>
 
     <script src="renderer.js"></script>
   </body>

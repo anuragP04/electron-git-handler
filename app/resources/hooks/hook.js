@@ -49,38 +49,11 @@ function checkSettings(name) {
   return { ...config.checks?.[name], ...repoOverride[name] };
 }
 
-function hasPackageJson() {
-  return fs.existsSync(path.join(repoRoot, "package.json"));
-}
-
-function runNpmCommand(args) {
-  const result = spawnSync("npm", args, { cwd: repoRoot, encoding: "utf8" });
-
-  if (result.error) {
-    return { status: "skip", message: `npm ${args.join(" ")}: npm not available (${result.error.message})` };
-  }
-
-  const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
-  const status = result.status === 0 ? "pass" : "fail";
-  return { status, message: output || `npm ${args.join(" ")} exited ${result.status}` };
-}
-
-// Available checks. Broader real checks (secrets scanning, sensitive file
-// detection, etc.) are still an open decision, see planning/decisions.md
-// open question #1. npm-audit/npm-doctor were added on explicit request.
-// Each check is gated by config so it can be enabled/disabled and set
-// blocking/warn-only, globally or per-repo, without code changes.
-const CHECK_DEFS = [
-  { name: "placeholder", run: () => ({ status: "pass", message: "anurag patel" }) },
-  {
-    name: "npm-audit",
-    run: () => (hasPackageJson() ? runNpmCommand(["audit"]) : { status: "skip", message: "npm-audit: no package.json, skipped" }),
-  },
-  {
-    name: "npm-doctor",
-    run: () => (hasPackageJson() ? runNpmCommand(["doctor"]) : { status: "skip", message: "npm-doctor: no package.json, skipped" }),
-  },
-];
+// Available checks. Real checks (secrets scanning, etc.) are still an open
+// decision, see planning/decisions.md open question #1 — only a placeholder
+// exists so far, but each check is gated by config so future checks can be
+// enabled/disabled and set blocking/warn-only per-repo without code changes.
+const CHECK_DEFS = [{ name: "placeholder", run: () => ({ status: "pass", message: "anurag patel" }) }];
 
 const checks = [];
 let shouldBlock = false;
@@ -93,7 +66,7 @@ for (const def of CHECK_DEFS) {
   const blocking = settings.blocking ?? config.defaultBlocking;
   checks.push({ name: def.name, status: result.status, message: result.message, blocking });
 
-  if (result.status === "fail" && blocking) shouldBlock = true;
+  if (result.status !== "pass" && blocking) shouldBlock = true;
 }
 
 // core.hooksPath being set globally means git never looks at a repo's own

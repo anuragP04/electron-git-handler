@@ -1,3 +1,11 @@
-// Bridge between main and renderer. Empty for now — install/uninstall/config/
-// history APIs get exposed here in later phases (4-7), via contextBridge,
-// keeping nodeIntegration off in the renderer.
+const { contextBridge, ipcRenderer } = require("electron");
+
+contextBridge.exposeInMainWorld("hookAPI", {
+  getStatus: () => ipcRenderer.invoke("hook:getStatus"),
+  install: () => ipcRenderer.invoke("hook:install"),
+  uninstall: () => ipcRenderer.invoke("hook:uninstall"),
+  getConfig: () => ipcRenderer.invoke("config:get"),
+  setConfig: (config) => ipcRenderer.invoke("config:set", config),
+  getHistory: (limit) => ipcRenderer.invoke("history:get", limit),
+  onHistoryUpdated: (callback) => ipcRenderer.on("history:updated", callback),
+});
